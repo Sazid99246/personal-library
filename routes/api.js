@@ -26,20 +26,21 @@ let Book = mongoose.model('Book', bookSchema)
 module.exports = function (app) {
 
   app.route('/api/books')
-    .get(function (req, res) {
+    .get(function (req, res){
       //response will be array of book objects
       //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
       let bookRay = []
       Book.find(
         ({}), //empty filter for now
         (error, books) => {
-          if (!error && books) {
+          if(!error && books){
             //console.log(books)
             books.forEach((book) => {
               bookRay.push({
                 _id: book._id,
                 title: book.title,
                 commentcount: book.commentcount,
+                comments: book.comments
               })
             })
             res.json(bookRay)
@@ -48,11 +49,11 @@ module.exports = function (app) {
       )
     })
 
-
-    .post(function (req, res) {
+    
+    .post(function (req, res){
       //response will contain new book object including atleast _id and title
       let title = req.body.title;
-      if (!req.body.title) {
+      if(!req.body.title){
         return res.json('missing required field title');
       }
       let newBook = new Book({
@@ -61,35 +62,36 @@ module.exports = function (app) {
         comments: []
       })
       newBook.save((error, savedBook) => {
-        if (!error && savedBook) {
+        if(!error && savedBook) {
           //console.log('Saved book: ' + savedBook)
           res.json(savedBook)
         }
       })
     })
+    
 
-
-    .delete(function (req, res) {
+    .delete(function(req, res){
       //if successful response will be 'complete delete successful'
       Book.deleteMany(
-        {},
+        { }, 
         (err, result) => {
-          if (!err) {
-            res.send('complete delete successful')
-          } else if (err) {
-            console.log(err)
-          }
-        })
+        if(!err){
+          res.send('complete delete successful')
+        }else if(err){
+          console.log(err)
+        }
+      })
     });
 
 
 
   app.route('/api/books/:id')
-    .get(function (req, res) {
+    .get(function (req, res){
       //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
       let bookid = req.params.id;
       Book.findById(bookid, function (err, book) {
-        if (!err && book) {
+        if(!err && book) {
+          console.log(book)
           res.json({
             _id: book._id,
             title: book.title,
@@ -102,12 +104,12 @@ module.exports = function (app) {
 
     })
 
-
-    .post(function (req, res) {
+    
+    .post(function(req, res){
       //json res format same as .get
       let bookid = req.params.id;
       let comment = req.body.comment;
-      if (!comment) {
+      if(!comment){
         return res.json('missing required field comment')
       }
       Book.findByIdAndUpdate(
@@ -117,37 +119,37 @@ module.exports = function (app) {
           //increment commentcount
           $inc: { commentcount: 1 }
 
-        },
+        }, 
         { new: true },
         (error, updatedBook) => {
-          if (!error && updatedBook) {
+          if(!error && updatedBook) {
             return res.json({
               _id: updatedBook._id,
               title: updatedBook.title,
               comments: updatedBook.comments
             })
-          } else if (!updatedBook) {
+          }else if(!updatedBook){
             return res.json('no book exists')
           }
         }
       )
 
     })
+    
 
-
-    .delete(function (req, res) {
+    .delete(function(req, res){
       let bookid = req.params.id;
       //if successful response will be 'delete successful'
       Book.deleteOne(
-        { _id: bookid },
+        { _id: bookid }, 
         (err, result) => {
-          if (!err && result.deletedCount !== 0) {
-            res.json('delete successful')
-            //a result will be returned even if nothing is deleted, we can test deletedCount.
-          } else if (result.deletedCount === 0) {
-            res.json('no book exists')
-          }
-        })
+        if(!err && result.deletedCount !== 0){
+          res.json('delete successful')
+        //a result will be returned even if nothing is deleted, we can test deletedCount.
+        }else if(result.deletedCount === 0){
+          res.json('no book exists')
+        }
+      })
     });
-
+  
 };
